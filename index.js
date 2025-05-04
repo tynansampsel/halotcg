@@ -46,3 +46,25 @@ app.get('/api/card', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 });
+
+app.get('/api/random', async (req, res) => {
+  try {
+
+    const count = await Card.common.countDocuments();
+    const randomIndex = Math.floor(Math.random() * count);
+    const randomCard = await Card.common.findOne().skip(randomIndex);
+
+    //const imgBuffer = Buffer.from(cards[0].image, 'base64');
+
+    // Set the proper content type (adjust as needed)
+    // const data = {
+      //   image_url
+      // }
+    //res.set('Content-Type', 'image/png'); // or image/jpeg, etc.
+    //res.send(imgBuffer);
+    res.json(randomCard);
+  } catch (err) {
+    console.error('Error fetching cards:', err);
+    res.status(500).json({ error: 'Failed to fetch products' });
+  }
+});

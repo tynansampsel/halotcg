@@ -2,9 +2,17 @@ function onLoad()
     spawnRandomMTGCard()
 end
 
+function spawnMultipleRandomMTGCards(count)
+    for i = 1, count do
+        local delay = i * 0.5 -- stagger requests to avoid flooding
+        Wait.time(function()
+            spawnRandomMTGCard({x = i * 2, y = 2, z = 0}) -- spread cards out
+        end, delay)
+    end
+end
+
 function spawnRandomMTGCard()
-    local url = "https://halotcg.onrender.com/api/random"
-    --https://cards.scryfall.io/border_crop/front/2/7/27f53bed-7075-4303-aa9e-fcca0a266e19.jpg?1692938931
+    local url = "https://api.scryfall.com/cards/random"
 
     WebRequest.get(url, function(response)
         if response.is_error then
@@ -12,12 +20,15 @@ function spawnRandomMTGCard()
             return
         end
 
-        -- Instead of raw image data, pass the URL directly if your method expects it
-        if response.text then
-            local imageUrl = url  -- This is the actual image URL you want
-            spawnMTGCard(imageUrl)  -- Call your method with the image URL
+        local data = JSON.decode(response.text)
+        local imageUrl = nil
+
+        imageUrl = data.image_uris.normal
+
+        if imageUrl then
+            spawnMTGCard(imageUrl)
         else
-            print("No valid image data for this card.")
+            print("No valid image URL for this card.")
         end
     end)
 end
