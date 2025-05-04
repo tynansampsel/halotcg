@@ -4,7 +4,7 @@ const PORT = 4000;
 
 const mongoose = require('mongoose');
 
-const mongoURI = 'mongodb+srv://tynansampsel:oFqiiHkMtnAdyVc5@cluster0.cnsksom.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const mongoURI = 'mongodb+srv://tynansampsel:oFqiiHkMtnAdyVc5@cluster0.cnsksom.mongodb.net/main?retryWrites=true&w=majority&appName=Cluster0';
 
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('✅ Connected to MongoDB'))
@@ -12,10 +12,37 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
 
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.send('API is running!');
+});
+
 app.get('/api/typea', (req, res) => {
   res.json({ message: 'HELLO' });
 });
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
+});
+
+
+const Card = require('./models/Card.js');
+
+app.get('/api/card', async (req, res) => {
+  try {
+    const cards = await Card.find(); // Get all cards
+    console.log('Fetched cards:', cards);  // Log fetched cards
+    //res.json(cards);
+
+    const imgBuffer = Buffer.from(cards[0].image, 'base64');
+
+    // Set the proper content type (adjust as needed)
+    res.set('Content-Type', 'image/png'); // or image/jpeg, etc.
+    // const data = {
+    //   image_url
+    // }
+    res.send(imgBuffer);
+  } catch (err) {
+    console.error('Error fetching cards:', err);
+    res.status(500).json({ error: 'Failed to fetch products' });
+  }
 });
