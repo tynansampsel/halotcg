@@ -1,70 +1,73 @@
 const express = require('express');
+
+const card_database = require('./database/card_database.json');
+
 const app = express();
 const PORT = 4000;
-
-const mongoose = require('mongoose');
-
-const mongoURI = 'mongodb+srv://tynansampsel:oFqiiHkMtnAdyVc5@cluster0.cnsksom.mongodb.net/main?retryWrites=true&w=majority&appName=Cluster0';
-
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('API is running!');
+	res.send('Weclome.');
 });
-
-app.get('/api/typea', (req, res) => {
-  res.json({ message: 'HELLO' });
-});
-
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+	console.log(`Server running at http://localhost:${PORT}`);
 });
 
+const rarity_weight = {
+	common: 6,
+	uncommon: 4,
+	rare: 2,
+	legendary: 1,
+	mythic: 1
+}
 
-const Card = require('./models/Card.js');
+app.get('/random', (req, res) => {
 
-app.get('/api/card', async (req, res) => {
-  try {
-    const cards = await Card.find(); // Get all cards
-    console.log('Fetched cards:', cards);  // Log fetched cards
-    //res.json(cards);
+	const max = (card_database.common.length * rarity_weight.common) +
+		(card_database.uncommon.length * rarity_weight.uncommon) +
+		(card_database.rare.length * rarity_weight.rare) +
+		(card_database.legendary.length * rarity_weight.legendary) +
+		(card_database.mythic.length * rarity_weight.mythic)
 
-    const imgBuffer = Buffer.from(cards[0].image, 'base64');
+	const ran = Math.Random() * max;
 
-    // Set the proper content type (adjust as needed)
-    res.set('Content-Type', 'image/png'); // or image/jpeg, etc.
-    // const data = {
-    //   image_url
-    // }
-    res.send(imgBuffer);
-  } catch (err) {
-    console.error('Error fetching cards:', err);
-    res.status(500).json({ error: 'Failed to fetch products' });
-  }
-});
+	let card_index = 0;
+	let array = "common"
+	if (ran < card_database.common.length * rarity_weight.common) {
 
-app.get('/api/random', async (req, res) => {
-  try {
+		card_index = Math.floor(ran / rarity_weight.common)
+		array = "common"
 
-    const count = await Card.common.countDocuments();
-    const randomIndex = Math.floor(Math.random() * count);
-    const randomCard = await Card.common.findOne().skip(randomIndex);
+	}else if (ran < card_database.uncommon.length * rarity_weight.uncommon) {
 
-    //const imgBuffer = Buffer.from(cards[0].image, 'base64');
+		card_index = Math.floor(ran / rarity_weight.uncommon)
+		card_index = card_index - card_database.common.length
+		array = "uncommon"	
 
-    // Set the proper content type (adjust as needed)
-    // const data = {
-      //   image_url
-      // }
-    //res.set('Content-Type', 'image/png'); // or image/jpeg, etc.
-    //res.send(imgBuffer);
-    res.json(randomCard);
-  } catch (err) {
-    console.error('Error fetching cards:', err);
-    res.status(500).json({ error: 'Failed to fetch products' });
-  }
+	}else if (ran < card_database.rare.length * rarity_weight.rare) {
+		card_index = Math.floor(ran / rarity_weight.rare)
+		card_index = card_index - card_database.common.length - card_database.uncommon.length
+		array = "rare"	
+
+	} else if (ran < card_database.legendary.length * rarity_weight.legendary) {
+		card_index = Math.floor(ran / rarity_weight.legendary)
+		card_index = card_index - card_database.common.length - card_database.uncommon.length - card_database.rare.length
+		array = "legendary"
+
+	} else if (ran < card_database.mythic.length * rarity_weight.mythic) {
+		card_index = Math.floor(ran / rarity_weight.legendary)
+		card_index = card_index - card_database.common.length - card_database.uncommon.length - card_database.rare.length - card_database.legendary.length
+		array = "mythic"
+	}
+
+
+
+	const card = card_database["mythic"][card_index]
+	console.log(card)
+	const imgBuffer = Buffer.from(card.image, 'base64');
+
+
+	res.set('Content-Type', 'image/png'); // or image/jpeg, etc.
+	res.send(imgBuffer);
 });
